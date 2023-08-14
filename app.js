@@ -1,21 +1,29 @@
 require("dotenv").config();
 
-const path = require("path");
 const express = require("express");
 const passport = require("passport");
-const { log } = require("console");
+const session = require("express-session");
+
 const app = express();
+
+app.use(
+  session({
+    secret: "cookie_secret",
+    proxy: true,
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 require("./auth-setup");
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "pages/home.html"));
-});
+const normal = require("./routes/normal");
+app.use("/", normal);
 
-app.get(
-  "/auth/login",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+const auth = require("./routes/auth");
+app.use("/auth/", auth);
 
 app.listen(process.env.PORT, () => {
   console.log(`App is running at http://localhost:${process.env.PORT} `);
